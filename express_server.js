@@ -12,6 +12,10 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 }
 
+function generateRandomString() {
+  return Math.random().toString(20).substring(2, 8);
+}
+console.log(generateRandomString());
 app.get('/', (req, res) => {
   res.send("Hello\n");
 });
@@ -30,6 +34,10 @@ app.get('/urls/:shortURL', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
+app.post('/urls', (req, res) => {
+  console.log(req.body); // log the POST request body to the console
+  res.send('OK'); // respond with 'OK'
+});
 
 // /:shortURL => route parameter
 // shortURL is a value stored in req.params object 
