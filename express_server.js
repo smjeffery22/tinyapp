@@ -15,7 +15,7 @@ const urlDatabase = {
 function generateRandomString() {
   return Math.random().toString(20).substring(2, 8);
 }
-console.log(generateRandomString());
+
 app.get('/', (req, res) => {
   res.send("Hello\n");
 });
@@ -34,15 +34,18 @@ app.get('/urls/:shortURL', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
-app.post('/urls', (req, res) => {
-  console.log(req.body); // log the POST request body to the console
-  res.send('OK'); // respond with 'OK'
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL]
+
+  res.redirect(longURL);
 });
 
-// /:shortURL => route parameter
-// shortURL is a value stored in req.params object 
-//  if we declare it
-//    req.params.shortURL <=> :shortURL
+app.post('/urls', (req, res) => {
+  const generatedRandomString = generateRandomString();
+
+  urlDatabase[generatedRandomString] = req.body.longURL;
+  res.redirect(`/urls/${generatedRandomString}`); // redirects to app.get('/urls/:shortURL',
+});
 
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
@@ -51,15 +54,6 @@ app.get('/urls.json', (req, res) => {
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
-
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`);
- });
- 
- app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
- });
 
 // Listenr
 app.listen(PORT, () => {
