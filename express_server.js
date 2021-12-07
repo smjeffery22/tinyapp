@@ -19,10 +19,15 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars); // passing templateVars to the templated called urls.index
 });
 
+app.get('/urls/new', (req, res) => {
+  res.render('urls_new');
+});
+
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] }
   res.render('urls_show', templateVars);
 });
+
 
 // /:shortURL => route parameter
 // shortURL is a value stored in req.params object 
