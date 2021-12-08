@@ -1,4 +1,3 @@
-const { response } = require('express');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -17,9 +16,9 @@ function generateRandomString() {
   return Math.random().toString(20).substring(2, 8);
 }
 
-app.get('/', (req, res) => {
-  res.send("Hello\n");
-});
+// app.get('/', (req, res) => {
+//   res.send("Hello\n");
+// });
 
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -31,7 +30,10 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] }; // longURL undefined at first; TinyURL for: on the webpage will be blank
+  const templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL] // longURL undefined at first; TinyURL for: on the webpage will be blank
+  };
   res.render('urls_show', templateVars);
 });
 
@@ -48,13 +50,45 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${generatedRandomString}`); // redirects to app.get('/urls/:shortURL',
 });
 
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
+// delete URL
+app.post('/urls/:shortURL/delete', (req, res) => {
+  const deletedURL = req.params.shortURL;
+  
+  delete urlDatabase[deletedURL];
+
+  res.redirect('/urls');
 });
 
-app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>\n');
+app.post('/urls/:id', (req, res) => {
+  const id = req.params.id;
+  const newLongURL = req.body.editURL;
+
+  urlDatabase[id] = newLongURL;
+
+  res.redirect(`/urls`);
 });
+
+// edit longURL
+//  GET /urls/shortURL
+//  Post /urls/shortURL
+// app.get('/urls/:shortURL', (req, res) => {
+//   const templateVars = { 
+//     shortURL: req.params.shortURL,
+//     longURL: urlDatabase[req.params.shortURL].longURL
+//   }
+//   console.log(templateVars);
+//   res.render('urls_show', templateVars);
+// });
+
+
+
+// app.get('/urls.json', (req, res) => {
+//   res.json(urlDatabase);
+// });
+
+// app.get('/hello', (req, res) => {
+//   res.send('<html><body>Hello <b>World</b></body></html>\n');
+// });
 
 // Listenr
 app.listen(PORT, () => {
