@@ -41,6 +41,16 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
 
+// check if email being registered already exists
+function checkEmailExistence(userDatabase, emailToCheck) {
+  for (const id in userDatabase) {
+    if (userDatabase[id]['email'] === emailToCheck) {
+      return true;
+    }
+  }
+  return false;
+}
+
 app.get('/', (req, res) => {
   res.send("Hello\n");
 });
@@ -49,16 +59,8 @@ app.get('/urls', (req, res) => {
   const templateVars = { 
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id],
-    // userEmail: users[req.cookies.user_id][email],
     urls: urlDatabase
   };
-
-  console.log(users);
-  console.log('user_id:', templateVars.user_id);
-  console.log('user:', templateVars.user);
-  // console.log('userEmail:', templateVars.user && templateVars.user.email);
-  // console.log('user:', users.user2RandomID.email);
-  // console.log('user email:', templateVars.userEmail);
 
   res.render('urls_index', templateVars); // passing templateVars to the templated called urls.index
 });
@@ -108,12 +110,23 @@ app.post('/register', (req, res) => {
   const newEmail = req.body.email;
   const newPassword = req.body.password;
 
+  // email or passwrod empty => response with 400 status code
+  if (!newEmail || !newPassword) {
+    return res.status(400).send('Email and Password cannot be empty!');
+  }
+
+  // email already exists => response with 400 status code
+  if (checkEmailExistence(users, newEmail)) {
+    return res.status(400).send('Email already exists!');
+  }
+
   // add user info to the database
-  users[newId] = {};
-  users[newId]['id'] = newId;
-  users[newId]['email'] = newEmail;
-  users[newId]['password'] = newPassword;
-  
+  users[newId] = {
+    id: newId,
+    email: newEmail,
+    password: newPassword
+  };
+
   res.cookie('user_id', newId);
   
   res.redirect('/urls');
