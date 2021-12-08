@@ -159,14 +159,26 @@ app.post('/urls/:id', (req, res) => {
   res.redirect('/urls');
 });
 
-// login
+// 
+// LOGIN
+//
 app.post('/login', (req, res) => {
   res.cookie('user_id', req.body.user_id);
 
   res.redirect('/urls');
 });
 
-// logout
+app.get('/login', (req, res) => {
+  const templateVars = { 
+    user_id: req.cookies.user_id,
+    user: users[req.cookies.user_id]
+  };
+  res.render('login', templateVars)
+});
+
+// 
+// LOGOUT
+//
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
 
