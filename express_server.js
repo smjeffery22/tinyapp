@@ -1,10 +1,12 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const PORT = 8080;
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
@@ -16,21 +18,28 @@ function generateRandomString() {
   return Math.random().toString(20).substring(2, 8);
 }
 
-// app.get('/', (req, res) => {
-//   res.send("Hello\n");
-// });
+app.get('/', (req, res) => {
+  res.send("Hello\n");
+});
 
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    username: req.cookies.username,
+    urls: urlDatabase
+  };
+
   res.render('urls_index', templateVars); // passing templateVars to the templated called urls.index
 });
 
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = { username: req.cookies.username };
+  
+  res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { 
+    username: req.cookies.username,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL] // longURL undefined at first; TinyURL for: on the webpage will be blank
   };
@@ -47,6 +56,7 @@ app.post('/urls', (req, res) => {
   const generatedRandomString = generateRandomString();
 
   urlDatabase[generatedRandomString] = req.body.longURL;
+
   res.redirect(`/urls/${generatedRandomString}`); // redirects to app.get('/urls/:shortURL',
 });
 
@@ -65,8 +75,22 @@ app.post('/urls/:id', (req, res) => {
 
   urlDatabase[id] = newLongURL;
 
-  res.redirect(`/urls`);
+  res.redirect('/urls');
 });
+
+// login
+app.post('/login', (req, res) => {
+  res.cookie('username', req.body.username);
+
+  res.redirect('/urls');
+});
+
+// logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+
+  res.redirect('/urls');
+})
 
 // edit longURL
 //  GET /urls/shortURL
