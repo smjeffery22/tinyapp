@@ -1,7 +1,10 @@
 const express = require('express');
 const app = express();
+
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+
 const PORT = 8080;
 
 app.set('view engine', 'ejs');
@@ -149,6 +152,7 @@ app.post('/register', (req, res) => {
   const newId = generateRandomString();
   const newEmail = req.body.email;
   const newPassword = req.body.password;
+  const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
   // email or passwrod empty => response with 400 status code
   if (!newEmail || !newPassword) {
@@ -164,7 +168,7 @@ app.post('/register', (req, res) => {
   users[newId] = {
     id: newId,
     email: newEmail,
-    password: newPassword
+    password: hashedPassword
   };
 
   res.cookie('user_id', newId);
@@ -175,7 +179,7 @@ app.post('/register', (req, res) => {
 
 app.post('/urls', (req, res) => {
   if (!req.cookies.user_id) {
-    return res.status(400).send('Please register/login first to see your list and/or shorten URL.');
+    return res.status(400).send('Please register/login first to see your list and/or shorten URL.\n');
   }
   
   const generatedRandomString = generateRandomString();
@@ -252,9 +256,8 @@ app.post('/login', (req, res) => {
   if (!userInfo) {
     return res.status(403).send('Email is not registered! Please register first.');
   }
-
-  // email registered & password doesn't match => response with 403 status code
-  if (userInfo.password !== enteredPassword) {
+    // email registered & password doesn't match => response with 403 status code
+  if (bcrypt.compareSync(enteredPassword, userInfo.password) === false) {
     return res.status(403).send('Incorrect password!');
   }
   
