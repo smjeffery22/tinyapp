@@ -37,29 +37,29 @@ const users = {
 // HELPER FUNCTION
 //
 // generate random 6-digit alphanumeric string for short URL
-function generateRandomString() {
+const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
-}
+};
 
 // check if email already exists in the database
-function checkEmailExistence(userDatabase, emailToCheck) {
+const checkEmailExistence = (userDatabase, emailToCheck) => {
   for (const id in userDatabase) {
     if (userDatabase[id]['email'] === emailToCheck) {
       return true;
     }
   }
   return false;
-}
+};
 
 // check if password exists in the database
-function checkPasswordExistence(userDatabase, passwordToCheck) {
+const checkPasswordExistence = (userDatabase, passwordToCheck) => {
   for (const id in userDatabase) {
     if (userDatabase[id]['password'] === passwordToCheck) {
-      return true;
+      return id;
     }
   }
   return false;
-}
+};
 
 
 app.get('/', (req, res) => {
@@ -190,13 +190,15 @@ app.post('/login', (req, res) => {
     return res.status(403).send('Email is not registered! Please register first.');
   }
 
+  const userId = checkPasswordExistence(users, enteredPassword);
   // email found, password doesn't match => response with 403 status code
-  if (checkEmailExistence(users, enteredEmail)) {
-    if (!checkPasswordExistence(users, enteredPassword)) {
-      return res.status(403).send('Incorrect password!');
-    }
-  }  
+  if (!userId) {
+    return res.status(403).send('Incorrect password!');
+  }
   
+  // set the cookie so the webpage knows this id was logged in
+  res.cookie('user_id', userId)
+
   res.redirect('/urls');
 });
 
@@ -210,21 +212,6 @@ app.post('/logout', (req, res) => {
 })
 
 
-
-// edit longURL
-//  GET /urls/shortURL
-//  Post /urls/shortURL
-// app.get('/urls/:shortURL', (req, res) => {
-//   const templateVars = { 
-//     shortURL: req.params.shortURL,
-//     longURL: urlDatabase[req.params.shortURL].longURL
-//   }
-//   console.log(templateVars);
-//   res.render('urls_show', templateVars);
-// });
-
-
-
 // app.get('/urls.json', (req, res) => {
 //   res.json(urlDatabase);
 // });
@@ -233,7 +220,9 @@ app.post('/logout', (req, res) => {
 //   res.send('<html><body>Hello <b>World</b></body></html>\n');
 // });
 
-// Listenr
+//
+// LISTENER
+//
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
