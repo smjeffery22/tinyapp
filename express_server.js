@@ -15,11 +15,6 @@ app.use(cookieParser());
 //
 // DATABASE
 //
-// const urlDatabase = {
-//   'b2xVn2': 'http://www.lighthouselabs.ca',
-//   '9sm5xK': 'http://www.google.com'
-// };
-
 const urlDatabase = {
   b6UTxQ: {
       longURL: "https://www.tsn.ca",
@@ -56,7 +51,7 @@ const generateRandomString = () => {
 const checkEmailExistence = (userDatabase, emailToCheck) => {
   for (const id in userDatabase) {
     if (userDatabase[id]['email'] === emailToCheck) {
-      return true;
+      return userDatabase[id];
     }
   }
   return false;
@@ -72,6 +67,18 @@ const checkPasswordExistence = (userDatabase, passwordToCheck) => {
   return false;
 };
 
+// return URLs where the userID = logged-in user's id
+const urlsForUser = (id) => {
+  const userURL = {};
+
+  for (const su in urlDatabase) {
+    if (urlDatabase[su]['userID'] === id) {
+      userURL[su] = urlDatabase[su]['longURL'];
+    }
+  }
+  return userURL;
+};
+
 
 app.get('/', (req, res) => {
   res.send("Hello\n");
@@ -81,9 +88,9 @@ app.get('/urls', (req, res) => {
   const templateVars = { 
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id],
-    urls: urlDatabase
+    urls: urlsForUser(req.cookies.user_id)
   };
-  console.log(urlDatabase)  ///////////////////////////
+
   res.render('urls_index', templateVars); // passing templateVars to the templated called urls.index
 });
 
@@ -117,6 +124,10 @@ app.get('/urls/:shortURL', (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]['longURL'];
+
+  // if (!longURL) {
+  //   return res.send('Invalid URL.');
+  // }
 
   res.redirect(longURL);
 });
@@ -214,20 +225,25 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
+  const userInfo = checkEmailExistence(users, enteredEmail);
+
+  // email & password blank => response with 403 status code
+  if (!enteredEmail || !enteredPassword) {
+    return res.status(403).send('Email/Password cannot be blank.');
+  }
 
   // email not registered => response with 403 status code
-  if (!checkEmailExistence(users, enteredEmail)) {
+  if (!userInfo) {
     return res.status(403).send('Email is not registered! Please register first.');
   }
 
-  const userId = checkPasswordExistence(users, enteredPassword);
   // email registered & password doesn't match => response with 403 status code
-  if (!userId) {
+  if (userInfo.password !== enteredPassword) {
     return res.status(403).send('Incorrect password!');
   }
   
   // upon successful login, set the cookie so the webpage knows the user is logged in
-  res.cookie('user_id', userId)
+  res.cookie('user_id', userInfo.id);
 
   res.redirect('/urls');
 });
