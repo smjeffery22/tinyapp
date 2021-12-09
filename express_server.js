@@ -17,12 +17,12 @@ app.use(cookieParser());
 //
 const urlDatabase = {
   b6UTxQ: {
-      longURL: "https://www.tsn.ca",
-      userID: "aJ48lW"
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
   },
   i3BoGr: {
-      longURL: "https://www.google.ca",
-      userID: "aJ48lW"
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
   }
 };
 
@@ -33,8 +33,8 @@ const users = {
     password: 'purple-money-dinosaur'
   },
   "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
 };
@@ -52,16 +52,6 @@ const checkEmailExistence = (userDatabase, emailToCheck) => {
   for (const id in userDatabase) {
     if (userDatabase[id]['email'] === emailToCheck) {
       return userDatabase[id];
-    }
-  }
-  return false;
-};
-
-// check if password exists in the database
-const checkPasswordExistence = (userDatabase, passwordToCheck) => {
-  for (const id in userDatabase) {
-    if (userDatabase[id]['password'] === passwordToCheck) {
-      return id;
     }
   }
   return false;
@@ -85,7 +75,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id],
     urls: urlsForUser(req.cookies.user_id)
@@ -95,20 +85,20 @@ app.get('/urls', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id]
-   };
+  };
 
-   if (!templateVars.user_id) {
+  if (!templateVars.user_id) {
     return res.redirect('/login');
-   }
+  }
   
   res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id],
     shortURL: req.params.shortURL,
@@ -117,10 +107,10 @@ app.get('/urls/:shortURL', (req, res) => {
 
   if (!templateVars.user_id) {
     return res.send('Non-user prohibited!');
-   }
+  }
 
   if (templateVars.user_id !== urlDatabase[templateVars.shortURL]['userID']) {
-  return res.send('You are not allowed here!');
+    return res.send('You are not allowed here!');
   }
 
   res.render('urls_show', templateVars);
@@ -144,12 +134,12 @@ app.get("/u/:shortURL", (req, res) => {
 //
 // registration page
 app.get('/register', (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id]
   };
   
-  res.render('register', templateVars)
+  res.render('register', templateVars);
 });
 
 // registraion input
@@ -186,11 +176,11 @@ app.post('/register', (req, res) => {
 app.post('/urls', (req, res) => {
   if (!req.cookies.user_id) {
     return res.status(400).send('Please register/login first to see your list and/or shorten URL.');
-   }
+  }
   
   const generatedRandomString = generateRandomString();
 
-  urlDatabase[generatedRandomString] = { 
+  urlDatabase[generatedRandomString] = {
     longURL: req.body.longURL,
     userID: req.cookies.user_id
   };
@@ -229,24 +219,23 @@ app.post('/urls/:id', (req, res) => {
   }
 
   // if (userId === urlDatabase[id]['userID']) {
-    console.log('You can edit');
-    urlDatabase[id]['longURL'] = newLongURL;
-    res.redirect('/urls');
+  urlDatabase[id]['longURL'] = newLongURL;
+  res.redirect('/urls');
   // } else {
   //   res.send('You are not authorized.');
   // }
 });
 
-// 
+//
 // LOGIN
 //
 app.get('/login', (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id]
   };
 
-  res.render('login', templateVars)
+  res.render('login', templateVars);
 });
 
 app.post('/login', (req, res) => {
@@ -275,14 +264,14 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
-// 
+//
 // LOGOUT
 //
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
 
   res.redirect('/urls');
-})
+});
 
 
 // app.get('/urls.json', (req, res) => {
