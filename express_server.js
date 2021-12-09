@@ -119,18 +119,25 @@ app.get('/urls/:shortURL', (req, res) => {
     return res.send('Non-user prohibited!');
    }
 
+  if (templateVars.user_id !== urlDatabase[templateVars.shortURL]['userID']) {
+  return res.send('You are not allowed here!');
+  }
+
   res.render('urls_show', templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]['longURL'];
-
-  // if (!longURL) {
-  //   return res.send('Invalid URL.');
-  // }
-
-  res.redirect(longURL);
+  const allShortUrls = Object.keys(urlDatabase);
+  
+  if (allShortUrls.includes(req.params.shortURL)) {
+    const longURL = urlDatabase[req.params.shortURL]['longURL'];
+    res.redirect(longURL);
+  } else {
+    res.status(404).send('Page Not Found');
+  }
+ 
 });
+
 
 //
 // REGISTRATION
@@ -177,6 +184,10 @@ app.post('/register', (req, res) => {
 
 
 app.post('/urls', (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(400).send('Please register/login first to see your list and/or shorten URL.');
+   }
+  
   const generatedRandomString = generateRandomString();
 
   urlDatabase[generatedRandomString] = { 
@@ -192,22 +203,38 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   const deletedURL = req.params.shortURL;
   const userId = req.cookies.user_id;
 
+  // if not logged in => cannot delete
   if (!userId) {
-    return res.send('Non-user prohibited!');
+    return res.status(403).send('You are not signed in!\n');
   }
 
-  delete urlDatabase[deletedURL];
-  console.log(req.params);
-  res.redirect('/urls');
+  // only owner of /urls/:shortURL can delete
+  //  check if userId matches userID from the urlDatabase
+  if (userId === urlDatabase[deletedURL]['userID']) {
+    delete urlDatabase[deletedURL];
+    res.redirect('/urls');
+  } else {
+    res.send('You are not authorized.');
+  }
 });
 
 app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
   const newLongURL = req.body.editURL;
-  
-  urlDatabase[id]['longURL'] = newLongURL;
+  const userId = req.cookies.user_id;
 
-  res.redirect('/urls');
+  // if not logged in => cannot delete
+  if (!userId) {
+    return res.status(403).send('You are not signed in!\n');
+  }
+
+  // if (userId === urlDatabase[id]['userID']) {
+    console.log('You can edit');
+    urlDatabase[id]['longURL'] = newLongURL;
+    res.redirect('/urls');
+  // } else {
+  //   res.send('You are not authorized.');
+  // }
 });
 
 // 
