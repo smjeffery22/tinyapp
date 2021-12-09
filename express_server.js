@@ -81,6 +81,10 @@ app.get('/urls/new', (req, res) => {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id]
    };
+
+   if (!templateVars.user_id) {
+    return res.redirect('/login');
+   }
   
   res.render('urls_new', templateVars);
 });
@@ -92,6 +96,11 @@ app.get('/urls/:shortURL', (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL] // longURL undefined at first; TinyURL for: on the webpage will be blank
   };
+
+  if (!templateVars.user_id) {
+    return res.send('Non-user prohibited!');
+   }
+
   res.render('urls_show', templateVars);
 });
 
@@ -110,6 +119,7 @@ app.get('/register', (req, res) => {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id]
   };
+  
   res.render('register', templateVars)
 });
 
@@ -155,7 +165,12 @@ app.post('/urls', (req, res) => {
 // delete URL
 app.post('/urls/:shortURL/delete', (req, res) => {
   const deletedURL = req.params.shortURL;
-  
+  const userId = req.cookies.user_id;
+
+  if (!userId) {
+    return res.send('Non-user prohibited!');
+  }
+
   delete urlDatabase[deletedURL];
 
   res.redirect('/urls');
@@ -164,7 +179,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
   const newLongURL = req.body.editURL;
-
+  
   urlDatabase[id] = newLongURL;
 
   res.redirect('/urls');
@@ -178,6 +193,7 @@ app.get('/login', (req, res) => {
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id]
   };
+
   res.render('login', templateVars)
 });
 
@@ -191,12 +207,12 @@ app.post('/login', (req, res) => {
   }
 
   const userId = checkPasswordExistence(users, enteredPassword);
-  // email found, password doesn't match => response with 403 status code
+  // email registered & password doesn't match => response with 403 status code
   if (!userId) {
     return res.status(403).send('Incorrect password!');
   }
   
-  // set the cookie so the webpage knows this id was logged in
+  // upon successful login, set the cookie so the webpage knows the user is logged in
   res.cookie('user_id', userId)
 
   res.redirect('/urls');
