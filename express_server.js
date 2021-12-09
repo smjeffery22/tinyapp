@@ -41,7 +41,7 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
 
-// check if email being registered already exists
+// check if email already exists in the database
 function checkEmailExistence(userDatabase, emailToCheck) {
   for (const id in userDatabase) {
     if (userDatabase[id]['email'] === emailToCheck) {
@@ -50,6 +50,17 @@ function checkEmailExistence(userDatabase, emailToCheck) {
   }
   return false;
 }
+
+// check if password exists in the database
+function checkPasswordExistence(userDatabase, passwordToCheck) {
+  for (const id in userDatabase) {
+    if (userDatabase[id]['password'] === passwordToCheck) {
+      return true;
+    }
+  }
+  return false;
+}
+
 
 app.get('/', (req, res) => {
   res.send("Hello\n");
@@ -162,18 +173,31 @@ app.post('/urls/:id', (req, res) => {
 // 
 // LOGIN
 //
-app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body.user_id);
-
-  res.redirect('/urls');
-});
-
 app.get('/login', (req, res) => {
   const templateVars = { 
     user_id: req.cookies.user_id,
     user: users[req.cookies.user_id]
   };
   res.render('login', templateVars)
+});
+
+app.post('/login', (req, res) => {
+  const enteredEmail = req.body.email;
+  const enteredPassword = req.body.password;
+
+  // email not registered => response with 403 status code
+  if (!checkEmailExistence(users, enteredEmail)) {
+    return res.status(403).send('Email is not registered! Please register first.');
+  }
+
+  // email found, password doesn't match => response with 403 status code
+  if (checkEmailExistence(users, enteredEmail)) {
+    if (!checkPasswordExistence(users, enteredPassword)) {
+      return res.status(403).send('Incorrect password!');
+    }
+  }  
+  
+  res.redirect('/urls');
 });
 
 // 
