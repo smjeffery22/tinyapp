@@ -1,11 +1,10 @@
 const express = require('express');
 const app = express();
-
 const bodyParser = require('body-parser');
 // const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session')
 const bcrypt = require('bcryptjs');
-
+const { checkEmailExistence } = require('./helpers');
 const PORT = 8080;
 
 app.set('view engine', 'ejs');
@@ -59,16 +58,6 @@ app.get('/users.json', (req, res) => {
 // generate random 6-digit alphanumeric string for short URL
 const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
-};
-
-// check if email already exists in the database
-const checkEmailExistence = (userDatabase, emailToCheck) => {
-  for (const id in userDatabase) {
-    if (userDatabase[id]['email'] === emailToCheck) {
-      return userDatabase[id];
-    }
-  }
-  return false;
 };
 
 // return URLs where the userID = logged-in user's id
